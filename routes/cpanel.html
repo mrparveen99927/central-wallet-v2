@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central Wallet - Master cPanel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', -apple-system, sans-serif; }
+body { background: #000000; color: #ffffff; padding: 16px; min-height: 100vh; position: relative; overflow-x: hidden; }
+.login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; display: flex; justify-content: center; align-items: center; z-index: 2000; }
+.login-card { width: 100%; max-width: 350px; background: #0a0a0a; padding: 26px; border-radius: 16px; border: 1px solid #1a1a1a; text-align: center; box-shadow: 0 0 20px rgba(157, 78, 221, 0.05); }
+.login-title { font-size: 18px; font-weight: 900; color: #9d4edd; text-transform: uppercase; margin-bottom: 22px; letter-spacing: 0.5px; }
+.input-group { margin-bottom: 16px; text-align: left; }
+.input-group label { display: block; font-size: 11px; color: #888888; margin-bottom: 6px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+.input-group input { width: 100%; padding: 12px 14px; background: #000000; border: 1px solid #2d3748; border-radius: 8px; color: #ffffff; font-size: 14px; outline: none; transition: 0.2s; }
+.input-group input:focus { border-color: #9d4edd; box-shadow: 0 0 8px rgba(157, 78, 221, 0.2); }
+.login-btn { width: 100%; padding: 14px; background: #9d4edd; color: #ffffff; border: none; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0 4px 12px rgba(157, 78, 221, 0.3); }
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #1a1a1a; padding-bottom: 14px; }
+.menu-toggle { font-size: 13px; font-weight: 800; color: #9d4edd; cursor: pointer; padding: 8px 14px; background: #0a0a0a; border-radius: 8px; border: 1px solid #1a1a1a; text-transform: uppercase; letter-spacing: 0.5px; }
+.panel-title { font-size: 15px; font-weight: 900; color: #ffffff; text-transform: uppercase; letter-spacing: 1px; }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 12px; padding: 16px; text-align: left; }
+.stat-title { font-size: 10px; color: #666666; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; letter-spacing: 0.5px; }
+.stat-value { font-size: 18px; font-weight: 900; color: #9d4edd; }
+.cpanel-box { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 16px; padding: 18px; margin-bottom: 24px; }
+.section-header-title { font-size: 13px; font-weight: 800; color: #ffffff; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; border-left: 3px solid #9d4edd; padding-left: 8px; }
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+th { color: #666666; padding: 12px 8px; border-bottom: 2px solid #1a1a1a; text-transform: uppercase; font-size: 10px; font-weight: 800; letter-spacing: 0.5px; }
+td { padding: 14px 8px; border-bottom: 1px solid #1a1a1a; white-space: nowrap; color: #e2e8f0; }
+tr:last-child td { border-bottom: none; }
+.sidebar-overlay { position: fixed; top: 0; left: -100%; width: 260px; height: 100%; background: #000000; border-right: 1px solid #1a1a1a; z-index: 3000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; }
+.sidebar-overlay.open { left: 0; }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #1a1a1a; padding-bottom: 14px; }
+.close-menu { font-size: 18px; color: #666666; cursor: pointer; font-weight: 700; }
+.menu-list { display: flex; flex-direction: column; gap: 8px; }
+.menu-item { display: flex; align-items: center; padding: 12px 14px; border-radius: 8px; color: #888888; text-decoration: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
+.menu-item:active, .menu-item.active-purple { background: rgba(157, 78, 221, 0.1); color: #9d4edd; }
+.backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 2999; display: none; }
+.backdrop.show { display: block; }
+.btn-action { padding: 6px 12px; background: #9d4edd; color: #ffffff; border: none; border-radius: 6px; font-size: 10px; font-weight: 800; cursor: pointer; text-transform: uppercase; margin-right: 4px; }
+.btn-decline { background: #ef4444; }
+.user-search-wrapper { margin-bottom: 16px; width: 100%; }
+.user-search-wrapper input { width: 100%; padding: 10px 14px; background: #000000; border: 1px solid #1a1a1a; border-radius: 8px; color: #ffffff; font-size: 12px; outline: none; }
+.user-search-wrapper input:focus { border-color: #9d4edd; }
+</style>
+</head>
+<body>
+
+<div id="admin-login-screen" class="login-overlay">
+<div class="login-card">
+<div class="login-title">🔒 cPanel Authentication</div>
+<div class="input-group">
+<label>Admin Username</label>
+<input type="text" id="panel-user" placeholder="admin">
+</div>
+<div class="input-group">
+<label>Master Password</label>
+<input type="password" id="panel-pass" placeholder="••••••••">
+</div>
+<button class="login-btn" onclick="executeAdminLogin()">Authorize Control</button>
+</div>
+</div>
+
+<div id="menu-backdrop" class="backdrop" onclick="toggleSidebar(false)"></div>
+<div id="sidebar-menu" class="sidebar-overlay">
+<div class="sidebar-header">
+<div style="font-size: 13px; font-weight: 900; color: #9d4edd; text-transform: uppercase; letter-spacing: 0.5px;">⚙️ Master Router</div>
+<span class="close-menu" onclick="toggleSidebar(false)">✕</span>
+</div>
+<div class="menu-list">
+<div class="menu-item active-purple" id="menu-dashboard" onclick="switchCPanelTab('dashboard')">📊 Dashboard Summary</div>
+<div class="menu-item" id="menu-deposit" onclick="switchCPanelTab('deposit')">📥 Deposit Verifications</div>
+<div class="menu-item" id="menu-withdrawal" onclick="switchCPanelTab('withdrawal')">📤 Withdrawal Payouts</div>
+<div class="menu-item" id="menu-switchnow" onclick="switchCPanelTab('switchnow')">🔄 Dynamic Gateway Link</div>
+<div class="menu-item" onclick="window.location.reload()"><span style="color: #ef4444;">🔒 Exit Terminal</span></div>
+</div>
+</div>
+
+<div class="top-bar">
+<span class="menu-toggle" onclick="toggleSidebar(true)">☰ Menu</span>
+<div class="panel-title">Central Control</div>
+<div style="width: 50px;"></div>
+</div>
+
+<div id="sec-dashboard" style="display: block;">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-title">System Users</div><div id="stat-total-users" class="stat-value">0</div></div>
+<div class="stat-card"><div class="stat-title">Engine Pulse</div><div class="stat-value" style="color: #10b981; font-size: 14px;">ONLINE</div></div>
+<div class="stat-card"><div class="stat-title">Gross Deposits</div><div id="stat-total-dep" class="stat-value">₹0</div></div>
+<div class="stat-card"><div class="stat-title">Gross Withdrawals</div><div id="stat-total-wit" class="stat-value">₹0</div></div>
+</div>
+<div class="cpanel-box">
+<div class="section-header-title">📋 Operational Members Register</div>
+<div class="user-search-wrapper">
+<input type="text" id="userSearchInput" onkeyup="searchTable()" placeholder="Search active records by Name, UID or Mobile...">
+</div>
+<div style="width: 100%; overflow-x: auto;">
+<table>
+<thead>
+<tr><th>UID</th><th>Full Identity</th><th>Communication</th><th>Coin balance</th><th>Manual Actions</th></tr>
+</thead>
+<tbody id="users-table-body">
+<tr><td colspan="5" style="text-align: center; color: #444444; padding: 24px;">Establish channel to synchronize data stream...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="cpanel-box" id="sec-deposit" style="display: none;">
+<div class="section-header-title" style="color: #10b981;">📥 Awaiting UTR Confirmations</div>
+<div style="width: 100%; overflow-x: auto;">
+<table>
+<thead>
+<tr><th>User UID</th><th>UTR Token Stream</th><th>Riyal Value</th><th>Operations</th></tr>
+</thead>
+<tbody id="deposit-table-body">
+<tr><td colspan="4" style="text-align: center; color: #444444; padding: 24px;">No ledger deposit records pending sync.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="cpanel-box" id="sec-withdrawal" style="display: none;">
+<div class="section-header-title" style="color: #ef4444;">📤 Active Payout Settlements</div>
+<div style="width: 100%; overflow-x: auto;">
+<table>
+<thead>
+<tr><th>User UID</th><th>Method Configuration</th><th>Debit Volume</th><th>Operations</th></tr>
+</thead>
+<tbody id="withdrawal-table-body">
+<tr><td colspan="4" style="text-align: center; color: #444444; padding: 24px;">No cashout sequences awaiting execution.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cpanel-box" id="sec-switchnow" style="display: none;">
+<div class="section-header-title" style="color: #f59e0b;">🔄 Dynamic Gateway Parameter Switch</div>
+<div class="input-group"><label>Live Router UPI Address</label><input type="text" id="cfgUpiId"></div>
+<div class="input-group"><label>Live ImgBB Payment QR String</label><input type="text" id="cfgQrCode"></div>
+<div class="input-group"><label>Bank Title Descriptor</label><input type="text" id="cfgBankName"></div>
+<div class="input-group"><label>Corporate Account Core Number</label><input type="text" id="cfgAccNo"></div>
+<div class="input-group"><label>IFS Code Routing String</label><input type="text" id="cfgIfsc"></div>
+<div class="input-group"><label>Account Custodian/Holder Identity</label><input type="text" id="cfgHolder"></div>
+<button class="login-btn" style="background: #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);" onclick="savePaymentSettings()">Inject Account State System-Wide</button>
+</div>
+
+<script>
+const API_URL = "https://central-wallet-v2.onrender.com";
+
+function executeAdminLogin() {
+const userVal = document.getElementById('panel-user').value.trim();
+const passVal = document.getElementById('panel-pass').value.trim();
+if (userVal === "admin" && passVal === "Parveen988") {
+document.getElementById('admin-login-screen').style.display = 'none';
+alert("cPanel terminal state unlocked.");
+fetchAdminDashboardDataWithAuth();
+} else {
+alert("Credentials rejected by master protocol.");
+}
+}
+
+function toggleSidebar(openMode) {
+const sidebar = document.getElementById('sidebar-menu');
+const backdrop = document.getElementById('menu-backdrop');
+if (openMode) { sidebar.classList.add('open'); backdrop.classList.add('show'); } 
+else { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+}
+</script>
+<script>
+function switchCPanelTab(tabName) {
+toggleSidebar(false);
+const tabsList = ['dashboard', 'withdrawal', 'deposit', 'switchnow'];
+tabsList.forEach(t => {
+const secElement = document.getElementById(`sec-${t}`);
+if (secElement) { secElement.style.display = (t === tabName) ? 'block' : 'none'; }
+});
+const menuItems = document.querySelectorAll('.menu-item');
+menuItems.forEach(item => item.classList.remove('active-purple'));
+const activeMenu = document.getElementById(`menu-${tabName}`);
+if (activeMenu) activeMenu.classList.add('active-purple');
+}
+
+async function fetchAdminDashboardDataWithAuth() {
+try {
+const response = await fetch(`${API_URL}/admin/get-payment-settings`);
+const config = await response.json();
+if (config) {
+document.getElementById('cfgUpiId').value = config.companyUpiId || '';
+document.getElementById('cfgQrCode').value = config.companyQrCodeUrl || '';
+document.getElementById('cfgBankName').value = config.companyBankDetails?.bankName || '';
+document.getElementById('cfgAccNo').value = config.companyBankDetails?.accountNumber || '';
+document.getElementById('cfgIfsc').value = config.companyBankDetails?.ifscCode || '';
+document.getElementById('cfgHolder').value = config.companyBankDetails?.accountHolder || '';
+}
+document.getElementById('stat-total-users').innerText = "ASYNC SYNC";
+} catch (err) {
+console.error("Ledger query interface mapping error:", err);
+}
+}
+
+async function savePaymentSettings() {
+const payload = {
+companyUpiId: document.getElementById('cfgUpiId').value,
+companyQrCodeUrl: document.getElementById('cfgQrCode').value,
+bankName: document.getElementById('cfgBankName').value,
+accountNumber: document.getElementById('cfgAccNo').value,
+ifscCode: document.getElementById('cfgIfsc').value,
+accountHolder: document.getElementById('cfgHolder').value
+};
+try {
+const res = await fetch(`${API_URL}/admin/update-payment-settings`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(payload)
+});
+const data = await res.json();
+alert(data.message || "Dynamic parameter override successful.");
+} catch (err) { alert("Network drop during switch transaction inject execution."); }
+}
+
+function searchTable() {
+let input = document.getElementById("userSearchInput").value.toUpperCase();
+let table = document.getElementById("users-table-body");
+let tr = table.getElementsByTagName("tr");
+for (let i = 0; i < tr.length; i++) {
+let txtValue = tr[i].textContent || tr[i].innerText;
+tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+}
+}
+</script>
+</body>
+</html>

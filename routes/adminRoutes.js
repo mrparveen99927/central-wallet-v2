@@ -4,11 +4,10 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const AdminSettings = require('../models/AdminSettings');
 
-// 1. एडमिन लॉगिन API (cPanel Access)
+// 1. एडमिन लॉगिन API
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-
         let settings = await AdminSettings.findOne();
         if (!settings) {
             settings = new AdminSettings();
@@ -18,20 +17,18 @@ router.post('/login', async (req, res) => {
         if (username !== settings.adminUsername || password !== settings.adminPassword) {
             return res.status(401).json({ error: "Invalid Admin Credentials!" });
         }
-
         res.json({ message: "Admin Login Successful!", success: true });
     } catch (err) {
-        res.status(500).json({ error: "Server Error", details: err.message });
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
-// 2. डिपॉजिट रिक्वेस्ट अप्रूव या डिक्लाइन (UTR Verification)
+// 2. डिपॉजिट अप्रूव/डिक्लाइन (UTR Verification)
 router.post('/process-deposit', async (req, res) => {
     try {
-        const { txnId, action } = req.body; // action: 'Approve' | 'Decline'
-
+        const { txnId, action } = req.body;
         const txn = await Transaction.findOne({ txnId, type: 'Deposit', status: 'Pending' });
-        if (!txn) return res.status(404).json({ error: "Pending deposit request not found!" });
+        if (!txn) return res.status(404).json({ error: "Pending request not found!" });
 
         const user = await User.findOne({ uid: txn.receiverId });
         if (!user) return res.status(404).json({ error: "User not found!" });
@@ -43,21 +40,19 @@ router.post('/process-deposit', async (req, res) => {
         } else {
             txn.status = 'Failed';
         }
-
         await txn.save();
-        res.json({ message: `Deposit request ${action}d successfully!`, status: txn.status });
+        res.json({ message: `Deposit request ${action}d!`, status: txn.status });
     } catch (err) {
-        res.status(500).json({ error: "Server Error", details: err.message });
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
-// 3. विड्रॉल रिक्वेस्ट अप्रूव या डिक्लाइन (Decline पर रिवर्सल लॉजिक)
+// 3. विड्रॉल अप्रूव/डिक्лайн (Decline पर रिवर्सल लॉलिक)
 router.post('/process-withdrawal', async (req, res) => {
     try {
-        const { txnId, action } = req.body; // action: 'Approve' | 'Decline'
-
+        const { txnId, action } = req.body;
         const txn = await Transaction.findOne({ txnId, type: 'Withdrawal', status: 'Pending' });
-        if (!txn) return res.status(404).json({ error: "Pending withdrawal request not found!" });
+        if (!txn) return res.status(404).json({ error: "Pending request not found!" });
 
         const user = await User.findOne({ uid: txn.senderId });
         if (!user) return res.status(404).json({ error: "User not found!" });
@@ -69,44 +64,17 @@ router.post('/process-withdrawal', async (req, res) => {
             user.realMoneyBalance += txn.amount;
             await user.save();
         }
-
         await txn.save();
-        res.json({ message: `Withdrawal request ${action}d successfully!`, status: txn.status });
+        res.json({ message: `Withdrawal request ${action}d!`, status: txn.status });
     } catch (err) {
-        res.status(500).json({ error: "Server Error", details: err.message });
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
-// 4. यूजर बैन और मैन्युअल वॉलेट कंट्रोल
-router.post('/wallet-control', async (req, res) => {
-    try {
-        const { uid, action, amount, banStatus } = req.body; // action: 'Add' | 'Deduct' | 'None'
-
-        const user = await User.findOne({ uid });
-        if (!user) return res.status(404).json({ error: "User not found!" });
-
-        if (typeof banStatus === 'boolean') {
-            user.isBanned = banStatus;
-        }
-
-        if (action === 'Add' && amount > 0) {
-            user.alphaCoins += Number(amount);
-        } else if (action === 'Deduct' && amount > 0) {
-            user.alphaCoins = Math.max(0, user.alphaCoins - Number(amount));
-        }
-
-        await user.save();
-        res.json({ message: "User account updated!", isBanned: user.isBanned, currentCoins: user.alphaCoins });
-    } catch (err) {
-        res.status(500).json({ error: "Server Error", details: err.message });
-    }
-});
-
-// 5. पेमेंट डिटेल्स लाइव बदलने का फॉर्म (बिना ऐप अपडेट किए चेंज)
+// 4. पेमेंट डिटेल्स लाइव बदलने का फॉर्म
 router.post('/update-payment-settings', async (req, res) => {
     try {
         const { bankName, accountNumber, ifscCode, accountHolder, companyUpiId, companyQrCodeUrl } = req.body;
-
         let settings = await AdminSettings.findOne();
         if (!settings) settings = new AdminSettings();
 
@@ -120,11 +88,11 @@ router.post('/update-payment-settings', async (req, res) => {
         await settings.save();
         res.json({ message: "Payment details updated live!", settings });
     } catch (err) {
-        res.status(500).json({ error: "Server Error", details: err.message });
+        res.status(500).json({ error: "Server Error" });
     }
 });
 
-// 6. लाइव गेट पेमेंट सेटिंग्स API (यूजर ऐप के लिए)
+// 5. लाइव गेट पेमेंट सेटिंग्स API (यूज़र ऐप हेतु)
 router.get('/get-payment-settings', async (req, res) => {
     try {
         const settings = await AdminSettings.findOne().select('companyBankDetails companyUpiId companyQrCodeUrl bannerAdUnitId minGameTransferLimit maxGameTransferLimit');
@@ -135,4 +103,3 @@ router.get('/get-payment-settings', async (req, res) => {
 });
 
 module.exports = router;
-          
