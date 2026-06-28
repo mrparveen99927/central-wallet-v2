@@ -7,7 +7,7 @@ const Transaction = require('../models/Transaction');
 router.post('/p2p-transfer', async (req, res) => {
     try {
         const { senderUid, receiverUpiOrMobile, amount, mpin } = req.body;
-        if (amount <= 0) return res.status(400).json({ error: "Invalid amount!" });
+        if (!senderUid || !receiverUpiOrMobile || amount <= 0) return res.status(400).json({ error: "Invalid transfer parameters!" });
 
         const sender = await User.findOne({ uid: senderUid });
         if (!sender) return res.status(404).json({ error: "Sender not found!" });
@@ -39,7 +39,7 @@ router.post('/p2p-transfer', async (req, res) => {
 
         res.json({ message: "Transfer successful!", txnId, newBalance: sender.alphaCoins });
     } catch (err) {
-        res.status(500).json({ error: "Server Error" });
+        res.status(500).json({ error: "Server Error", details: err.message });
     }
 });
 
@@ -47,7 +47,7 @@ router.post('/p2p-transfer', async (req, res) => {
 router.post('/deposit-request', async (req, res) => {
     try {
         const { uid, amount, utrNumber } = req.body;
-        if (amount <= 0 || !utrNumber || utrNumber.length < 6) return res.status(400).json({ error: "Invalid amount or UTR!" });
+        if (!uid || amount <= 0 || !utrNumber || utrNumber.length < 6) return res.status(400).json({ error: "Invalid amount or UTR!" });
 
         const utrExists = await Transaction.findOne({ utrNumber });
         if (utrExists) return res.status(400).json({ error: "This UTR number has already been used!" });
@@ -55,8 +55,7 @@ router.post('/deposit-request', async (req, res) => {
         const user = await User.findOne({ uid });
         if (!user) return res.status(404).json({ error: "User not found!" });
 
-        const txnId = 'TXNDEP' + 
-        ();
+        const txnId = 'TXNDEP' + Date.now();
         const newDepositTxn = new Transaction({
             txnId, senderId: 'BANK', receiverId: uid, amount: Number(amount), type: 'Deposit', utrNumber, status: 'Pending'
         });
@@ -64,7 +63,7 @@ router.post('/deposit-request', async (req, res) => {
 
         res.json({ message: "Deposit request submitted successfully!", txnId });
     } catch (err) {
-        res.status(500).json({ error: "Server Error" });
+        res.status(500).json({ error: "Server Error", details: err.message });
     }
 });
 
@@ -72,19 +71,17 @@ router.post('/deposit-request', async (req, res) => {
 router.post('/withdraw-request', async (req, res) => {
     try {
         const { uid, amount, mpin } = req.body;
-        if (amount <= 0) return res.status(400).json({ error: "Invalid amount!" });
+        if (!uid || amount <= 0) return res.status(400).json({ error: "Invalid amount!" });
 
         const user = await User.findOne({ uid });
         if (!user) return res.status(404).json({ error: "User not found!" });
         if (user.mpin !== mpin) return res.status(401).json({ error: "Incorrect MPIN!" });
-        
-        if (user.realMoneyBalance < amount) return res.status(400).json({ error: "Insufficient Balance! Convert coins first." });
+        if (user.realMoneyBalance < amount) return res.status(400).json({ error: "Insufficient Balance!" });
 
         user.realMoneyBalance -= Number(amount);
         await user.save();
 
-        const txnId = 'TXNWTH' + 
-        ();
+        const txnId = 'TXNWTH' + Date.now();
         const newWithdrawTxn = new Transaction({
             txnId, senderId: uid, receiverId: 'BANK', amount: Number(amount), type: 'Withdrawal', status: 'Pending'
         });
@@ -92,8 +89,9 @@ router.post('/withdraw-request', async (req, res) => {
 
         res.json({ message: "Withdrawal request submitted!", txnId });
     } catch (err) {
-        res.status(500).json({ error: "Server Error" });
+        res.status(500).json({ error: "Server Error", details: err.message });
     }
 });
 
 module.exports = router;
+    
