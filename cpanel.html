@@ -1,252 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Central Wallet V2 - Master cPanel</title>
-    <!-- सुधरा हुआ पक्का स्टेबल Tailwind CSS लिंक -->
-    <link href="https://jsdelivr.net" rel="stylesheet">
-    <link rel="stylesheet" href="https://cloudflare.com">
-    <style>
-        .custom-blur { backdrop-filter: blur(10px); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Central Wallet - Secure cPanel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+body { background: #000000; color: #ffffff; padding: 16px; min-height: 100vh; position: relative; overflow-x: hidden; }
+.login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; display: flex; justify-content: center; align-items: center; z-index: 2000; }
+.login-card { width: 100%; max-width: 360px; background: #121212; padding: 24px; border-radius: 16px; border: 1px solid #1c1c1c; text-align: center; }
+.login-title { font-size: 18px; font-weight: 800; color: #9d4edd; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.5px; }
+.input-group { margin-bottom: 16px; text-align: left; }
+.input-group label { display: block; font-size: 11px; color: #aaa; margin-bottom: 6px; text-transform: uppercase; font-weight: bold; }
+.input-group input { width: 100%; padding: 12px; background: #000000; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 15px; outline: none; }
+.input-group input:focus { border-color: #9d4edd; }
+.login-btn { width: 100%; padding: 14px; background: #9d4edd; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #1c1c1c; padding-bottom: 12px; }
+.menu-toggle { font-size: 20px; color: #9d4edd; cursor: pointer; user-select: none; padding: 6px 12px; background: #121212; border-radius: 8px; border: 1px solid #1c1c1c; font-weight: bold; }
+.panel-title { font-size: 16px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: #121212; border: 1px solid #1c1c1c; border-radius: 12px; padding: 14px; text-align: left; }
+.stat-title { font-size: 11px; color: #888; font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+.stat-value { font-size: 20px; font-weight: 800; color: #9d4edd; }
+.cpanel-box { background: #121212; border: 1px solid #1c1c1c; border-radius: 16px; padding: 16px; margin-bottom: 24px; }
+.section-header-title { font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+th { color: #888; padding: 10px 8px; border-bottom: 2px solid #1c1c1c; text-transform: uppercase; font-size: 11px; font-weight: bold; }
+td { padding: 12px 8px; border-bottom: 1px solid #1c1c1c; white-space: nowrap; color: #ddd; }
+tr:last-child td { border-bottom: none; }
+.user-uid { color: #9d4edd; font-weight: bold; }
+.sidebar-overlay { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #0a0a0a; border-right: 2px solid #9d4edd; z-index: 2000; transition: 0.3s; padding: 20px; }
+.sidebar-overlay.open { left: 0; }
+.sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid #1c1c1c; padding-bottom: 12px; }
+.close-menu { font-size: 22px; color: #666; cursor: pointer; font-weight: bold; }
+.menu-list { display: flex; flex-direction: column; gap: 6px; }
+.menu-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; color: #aaa; text-decoration: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+.menu-item:active, .menu-item.active-purple { background: rgba(157, 78, 221, 0.15); color: #9d4edd; border-left: 4px solid #9d4edd; }
+.incoming-badge { font-size: 9px; background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: auto; }
+.backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 1999; display: none; }
+.backdrop.show { display: block; }
+.btn-action { padding: 6px 12px; background: #9d4edd; color: white; border: none; border-radius: 6px; font-[11px]; font-weight: bold; cursor: pointer; text-transform: uppercase; margin-right: 4px; }
+.btn-decline { background: #ef4444; }
+</style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
-    
-    <div id="loginPage" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4">
-        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
-                    <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
-                </div>
-                <h2 class="text-2xl font-bold tracking-tight">Master cPanel V2</h2>
-                <p class="text-slate-400 text-sm mt-1">Authorized Access Only</p>
-            </div>
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Username</label>
-                    <input type="text" id="adminUser" placeholder="admin" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Master Password</label>
-                    <div class="relative">
-                        <input type="password" id="adminPass" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
-                        <button onclick="togglePassword()" class="absolute right-4 top-3.5 text-slate-400 hover:text-white"><i id="passEye" class="fa-solid fa-eye"></i></button>
-                    </div>
-                </div>
-                <button onclick="handleAdminLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 mt-2 cursor-pointer">
-                    <span>Secure Authorization</span><i class="fa-solid fa-arrow-right text-sm"></i>
-                </button>
-                <p id="loginError" class="text-red-400 text-xs text-center font-medium hidden"></p>
-            </div>
-        </div>
-    </div>
-        <div id="adminPanel" class="hidden min-h-screen flex flex-col md:flex-row">
-        <aside class="w-full md:w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
-            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">CW</div>
-                    <span class="font-bold tracking-wide text-sm uppercase">Control Room</span>
-                </div>
-                <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">LIVE</span>
-            </div>
-            <nav class="p-4 space-y-1.5 flex-1 overflow-y-auto text-sm">
-                <button onclick="switchTab('dashboard')" class="tab-btn active w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-slate-900 text-white font-medium text-left">
-                    <i class="fa-solid fa-chart-pie w-5 text-blue-500"></i><span>Main UI Summary</span>
-                </button>
-                <button onclick="switchTab('users')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left">
-                    <i class="fa-solid fa-users w-5 text-slate-400"></i><span>User Details & Ban</span>
-                </button>
-                <button onclick="switchTab('deposits')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left relative">
-                    <i class="fa-solid fa-arrow-down-to-square w-5 text-slate-400"></i><span>Deposit Requests</span>
-                    <span id="depositBadge" class="absolute right-4 bg-amber-500 text-slate-950 font-bold text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
-                </button>
-                <button onclick="switchTab('withdrawals')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left relative">
-                    <i class="fa-solid fa-arrow-up-from-square w-5 text-slate-400"></i><span>Withdrawal Requests</span>
-                    <span id="withdrawBadge" class="absolute right-4 bg-amber-500 text-slate-950 font-bold text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
-                </button>
-                <button onclick="switchTab('paymentSettings')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left">
-                    <i class="fa-solid fa-wallet w-5 text-slate-400"></i><span>Account Switch Tool</span>
-                </button>
-                <div class="pt-4 border-t border-slate-800 my-2"></div>
-                <button onclick="handleLogout()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-950/20 text-left">
-                    <i class="fa-solid fa-right-from-bracket w-5"></i><span>Secure Logout</span>
-                </button>
-            </nav>
-        </aside>
-                <main class="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 id="pageTitle" class="text-2xl font-bold tracking-tight text-white">Main UI Summary</h1>
-                    <p class="text-slate-400 text-xs mt-1">Live server link: ://mrparveen99927.github.io/central-wallet-v2/</p>
-                </div>
-            </header>
-            <div id="tabContent">
-                <div id="dashboardTab" class="space-y-6">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
-                            <div class="flex justify-between items-start">
-                                <div><p class="text-xs font-semibold uppercase text-slate-400">Total Users</p><h3 id="statTotalUsers" class="text-2xl font-bold mt-2 text-white">0</h3></div>
-                                <div class="bg-blue-500/10 text-blue-400 p-3 rounded-xl"><i class="fa-solid fa-users text-lg"></i></div>
-                            </div>
-                        </div>
-                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
-                            <div class="flex justify-between items-start">
-                                <div><p class="text-xs font-semibold uppercase text-slate-400">Total Deposit</p><h3 id="statTotalDeposit" class="text-2xl font-bold mt-2 text-emerald-400">₹0</h3></div>
-                                <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl"><i class="fa-solid fa-arrow-down-long text-lg"></i></div>
-                            </div>
-                        </div>
-                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
-                            <div class="flex justify-between items-start">
-                                <div><p class="text-xs font-semibold uppercase text-slate-400">Total Withdrawal</p><h3 id="statTotalWithdraw" class="text-2xl font-bold mt-2 text-red-400">₹0</h3></div>
-                                <div class="bg-red-500/10 text-red-400 p-3 rounded-xl"><i class="fa-solid fa-arrow-up-long text-lg"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden mt-8">
-                        <div class="p-5 border-b border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <h3 class="font-bold text-white">Live System Users</h3>
-                            <div class="relative w-full sm:w-64">
-                                <input type="text" id="userSearchInput" onkeyup="searchTable()" placeholder="Search..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-700">
-                                        <th class="p-4">UID</th><th class="p-4">User Details</th><th class="p-4">Wallet Balance</th><th class="p-4">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="userTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                                <div id="depositsTab" class="hidden space-y-6">
-                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-                        <div class="p-5 border-b border-slate-700"><h3 class="font-bold text-white">Pending UTR Verifications</h3></div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-700">
-                                        <th class="p-4">Txn ID</th><th class="p-4">User UID</th><th class="p-4">Amount</th><th class="p-4">Submitted UTR</th><th class="p-4">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="depositTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div id="withdrawalsTab" class="hidden space-y-6">
-                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
-                        <div class="p-5 border-b border-slate-700"><h3 class="font-bold text-white">Pending Payout Requests</h3></div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-700">
-                                        <th class="p-4">Txn ID</th><th class="p-4">User UID</th><th class="p-4">Amount</th><th class="p-4">Details</th><th class="p-4">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="withdrawTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div id="paymentSettingsTab" class="hidden max-w-2xl bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-                    <h3 class="font-bold text-lg text-white mb-5 border-b border-slate-700 pb-3">Dynamic Account Switch Tool</h3>
-                    <div class="space-y-4 text-xs">
-                        <div><label class="block text-slate-400 mb-1">Live UPI ID</label><input type="text" id="cfgUpiId" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
-                        <div><label class="block text-slate-400 mb-1">Live QR Link</label><input type="text" id="cfgQrCode" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-slate-400 mb-1">Bank Name</label><input type="text" id="cfgBankName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
-                            <div><label class="block text-slate-400 mb-1">Account No</label><input type="text" id="cfgAccNo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-slate-400 mb-1">IFSC Code</label><input type="text" id="cfgIfsc" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
-                            <div><label class="block text-slate-400 mb-1">Holder Name</label><input type="text" id="cfgHolder" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
-                        </div>
-                        <button onclick="savePaymentSettings()" class="w-full bg-emerald-600 text-white font-semibold py-3 rounded-xl mt-3 cursor-pointer">Update Accounts</button>
-                    </div>
-                </div>
-            </div>
-        </main>
-        </div>
-            <script>
-        const API_URL = "https://central-wallet-v2.onrender.com";
-        function togglePassword() {
-            const passInput = document.getElementById('adminPass');
-            const eyeIcon = document.getElementById('passEye');
-            if (passInput.type === "password") { passInput.type = "text"; eyeIcon.className = "fa-solid fa-eye-slash"; }
-            else { passInput.type = "password"; eyeIcon.className = "fa-solid fa-eye"; }
-        }
-        async function handleAdminLogin() {
-            const username = document.getElementById('adminUser').value;
-            const password = document.getElementById('adminPass').value;
-            const errBox = document.getElementById('loginError');
-            try {
-                const res = await fetch(`${API_URL}/admin/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('loginPage').classList.add('hidden');
-                    document.getElementById('adminPanel').classList.remove('hidden');
-                    loadDashboardData();
-                } else { errBox.innerText = data.error || "Authorization Failed!"; errBox.classList.remove('hidden'); }
-            } catch (err) { errBox.innerText = "Server Unreachable!"; errBox.classList.remove('hidden'); }
-        }
-        function switchTab(tabId) {
-            const tabs = ['dashboard', 'deposits', 'withdrawals', 'paymentSettings'];
-            tabs.forEach(t => { document.getElementById(`${t}Tab`)?.classList.add('hidden'); });
-            document.getElementById(`${tabId}Tab`).classList.remove('hidden');
-            document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('bg-slate-900', 'text-white'); btn.classList.add('text-slate-400'); });
-            event.currentTarget.classList.add('bg-slate-900', 'text-white');
-        }
-        async function loadDashboardData() {
-            try {
-                const res = await fetch(`${API_URL}/admin/get-payment-settings`);
-                const config = await res.json();
-                if(config) {
-                    document.getElementById('cfgUpiId').value = config.companyUpiId || '';
-                    document.getElementById('cfgQrCode').value = config.companyQrCodeUrl || '';
-                    document.getElementById('cfgBankName').value = config.companyBankDetails?.bankName || '';
-                    document.getElementById('cfgAccNo').value = config.companyBankDetails?.accountNumber || '';
-                    document.getElementById('cfgIfsc').value = config.companyBankDetails?.ifscCode || '';
-                    document.getElementById('cfgHolder').value = config.companyBankDetails?.accountHolder || '';
-                }
-            } catch(e) { console.error("Error configuration", e); }
-        }
-        async function savePaymentSettings() {
-            const payload = {
-                companyUpiId: document.getElementById('cfgUpiId').value,
-                companyQrCodeUrl: document.getElementById('cfgQrCode').value,
-                bankName: document.getElementById('cfgBankName').value,
-                accountNumber: document.getElementById('cfgAccNo').value,
-                ifscCode: document.getElementById('cfgIfsc').value,
-                accountHolder: document.getElementById('cfgHolder').value
-            };
-            try {
-                const res = await fetch(`${API_URL}/admin/update-payment-settings`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json(); alert(data.message || "Updated successfully!");
-            } catch (err) { alert("Failed to update settings!"); }
-        }
-        function searchTable() {
-            let input = document.getElementById("userSearchInput").value.toUpperCase();
-            let table = document.getElementById("userTableBody");
-            let tr = table.getElementsByTagName("tr");
-            for (let i = 0; i < tr.length; i++) {
-                let txtValue = tr[i].textContent || tr[i].innerText;
-                tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
-            }
-        }
-        function handleLogout() { window.location.reload(); }
-    </script>
+<body>
+<div id="admin-login-screen" class="login-overlay">
+<div class="login-card">
+<div class="login-title">🔑 cPanel Admin Login</div>
+<div class="input-group">
+<label>Admin Username</label>
+<input type="text" id="panel-user" placeholder="Enter username">
+</div>
+<div class="input-group">
+<label>Master Password</label>
+<input type="password" id="panel-pass" placeholder="Enter password">
+</div>
+<button class="login-btn" onclick="executeAdminLogin()">Unlock cPanel</button>
+</div>
+</div>
+
+<div id="menu-backdrop" class="backdrop" onclick="toggleSidebar(false)"></div>
+
+<div id="sidebar-menu" class="sidebar-overlay">
+<div class="sidebar-header">
+<div style="font-size: 15px; font-weight: 800; color: #9d4edd; uppercase">⚙️ cPanel Menu</div>
+<span class="close-menu" onclick="toggleSidebar(false)">✕</span>
+</div>
+<div class="menu-list">
+<div class="menu-item active-purple" id="menu-dashboard" onclick="switchCPanelTab('dashboard')">📊 Dashboard Overview</div>
+<div class="menu-item" id="menu-deposit" onclick="switchCPanelTab('deposit')">📥 Deposit Requests (UTR)</div>
+<div class="menu-item" id="menu-withdrawal" onclick="switchCPanelTab('withdrawal')">📤 Withdrawal Requests</div>
+<div class="menu-item" id="menu-switchnow" onclick="switchCPanelTab('switchnow')">🔄 Account Switch Tool</div>
+<div class="menu-item" onclick="window.location.reload()"><span style="color:#ef4444">🔒 Secure Logout</span></div>
+</div>
+</div>
+
+<div class="top-bar">
+<span class="menu-toggle" onclick="toggleSidebar(true)">☰ MENU</span>
+<div class="panel-title">Central cPanel</div>
+<div style="width: 24px;"></div>
+</div>
+<div id="sec-dashboard" style="display: block;">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-title">Total Registered</div><div id="stat-total-users" class="stat-value">0</div></div>
+<div class="stat-card"><div class="stat-title">System Live</div><div class="stat-value" style="color:#10b981; font-size:14px">ACTIVE</div></div>
+<div class="stat-card"><div class="stat-title">Total Deposited</div><div id="stat-total-dep" class="stat-value">₹0.00</div></div>
+<div class="stat-card"><div class="stat-title">Total Withdrawn</div><div id="stat-total-wit" class="stat-value">₹0.00</div></div>
+</div>
+
+<div class="cpanel-box">
+<div class="section-header-title">📋 Registered Members Data Table</div>
+<div style="width: 100%; overflow-x: auto;">
+<table>
+<thead>
+<tr><th>UID</th><th>Name</th><th>Mobile</th><th>Balance Coins</th><th>Control Action</th></tr>
+</thead>
+<tbody id="users-table-body">
+<tr><td colspan="5" style="text-align: center; color: #666; padding: 20px;">Please login to load records...</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="cpanel-box" id="sec-deposit" style="display: none;">
+<div class="section-header-title" style="color: #10b981;">📥 Pending UTR Deposit Requests</div>
+<div style="width: 100%; overflow-x: auto;">
+<table>
+<thead>
+<tr><th>User UID</th><th>Submitted UTR</th><th>Amount</th><th>Verification</th></tr>
+</thead>
+<tbody id="deposit-table-body">
+<tr><td colspan="4" style="text-align: center; color: #666; padding: 20px;">No pending UTR token requests.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="cpanel-box" id="sec-withdrawal" style="display: none;">
+<div class="section-header-title" style="color: #ef4444;">📤 Pending Withdrawal Requests</div>
+<div style="width: 100%; overflow-x: auto;">
+<table>
+<thead>
+<tr><th>User UID</th><th>Payout Option</th><th>Amount</th><th>Process Action</th></tr>
+</thead>
+<tbody id="withdrawal-table-body">
+<tr><td colspan="4" style="text-align: center; color: #666; padding: 20px;">No pending cashout requests.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="cpanel-box" id="sec-switchnow" style="display: none;">
+<div class="section-header-title" style="color: #f59e0b;">🔄 Dynamic Account Switch Tool</div>
+<div class="input-group"><label>Live System UPI ID</label><input type="text" id="cfgUpiId"></div>
+<div class="input-group"><label>Live QR Image URL (ImgBB)</label><input type="text" id="cfgQrCode"></div>
+<div class="input-group"><label>Bank Name</label><input type="text" id="cfgBankName"></div>
+<div class="input-group"><label>Account Number</label><input type="text" id="cfgAccNo"></div>
+<div class="input-group"><label>IFSC Code</label><input type="text" id="cfgIfsc"></div>
+<div class="input-group"><label>Account Holder Name</label><input type="text" id="cfgHolder"></div>
+<button class="login-btn" style="background:#10b981" onclick="savePaymentSettings()">Update Accounts Globally</button>
+</div>
+<script>
+const API_URL = "https://central-wallet-v2.onrender.com";
+let authUser = "admin";
+let authPass = "Parveen988";
+
+function executeAdminLogin() {
+const userVal = document.getElementById('panel-user').value.trim();
+const passVal = document.getElementById('panel-pass').value.trim();
+if (userVal === "admin" && passVal === "Parveen988") {
+document.getElementById('admin-login-screen').style.display = 'none';
+alert("cPanel unlocked successfully!");
+authUser = userVal; authPass = passVal;
+fetchAdminDashboardDataWithAuth();
+} else {
+alert("Invalid Master Credentials!");
+}
+}
+
+function toggleSidebar(openMode) {
+const sidebar = document.getElementById('sidebar-menu');
+const backdrop = document.getElementById('menu-backdrop');
+if (openMode) { sidebar.classList.add('open'); backdrop.classList.add('show'); } 
+else { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+}
+
+function switchCPanelTab(tabName) {
+toggleSidebar(false);
+const tabsList = ['dashboard', 'withdrawal', 'deposit', 'switchnow'];
+tabsList.forEach(t => {
+const secElement = document.getElementById(`sec-${t}`);
+if (secElement) { secElement.style.display = (t === tabName) ? 'block' : 'none'; }
+});
+const menuItems = document.querySelectorAll('.menu-item');
+menuItems.forEach(item => item.classList.remove('active-purple'));
+const activeMenu = document.getElementById(`menu-${tabName}`);
+if (activeMenu) activeMenu.classList.add('active-purple');
+}
+</script>
+<script>
+async function fetchAdminDashboardDataWithAuth() {
+const usersTableBody = document.getElementById('users-table-body');
+try {
+const response = await fetch(`${API_URL}/admin/get-payment-settings`);
+const config = await response.json();
+if (config) {
+document.getElementById('cfgUpiId').value = config.companyUpiId || '';
+document.getElementById('cfgQrCode').value = config.companyQrCodeUrl || '';
+document.getElementById('cfgBankName').value = config.companyBankDetails?.bankName || '';
+document.getElementById('cfgAccNo').value = config.companyBankDetails?.accountNumber || '';
+document.getElementById('cfgIfsc').value = config.companyBankDetails?.ifscCode || '';
+document.getElementById('cfgHolder').value = config.companyBankDetails?.accountHolder || '';
+}
+// स्टेटिस्टिक्स सिंक
+document.getElementById('stat-total-users').innerText = "LIVE SYNC";
+} catch (err) {
+console.error(err);
+}
+}
+
+async function savePaymentSettings() {
+const payload = {
+companyUpiId: document.getElementById('cfgUpiId').value,
+companyQrCodeUrl: document.getElementById('cfgQrCode').value,
+bankName: document.getElementById('cfgBankName').value,
+accountNumber: document.getElementById('cfgAccNo').value,
+ifscCode: document.getElementById('cfgIfsc').value,
+accountHolder: document.getElementById('cfgHolder').value
+};
+try {
+const res = await fetch(`${API_URL}/admin/update-payment-settings`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(payload)
+});
+const data = await res.json();
+alert(data.message || "Updated Live Channels Successfully!");
+} catch (err) { alert("Server Error updating accounts!"); }
+}
+</script>
 </body>
 </html>
