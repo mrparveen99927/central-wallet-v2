@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Wallet V2 - User App</title>
+    <!-- पक्का स्टेबल Tailwind CSS लिंक मोबाइल रिस्पॉन्सिव थीम के लिए -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <style>
+        body { background-color: #0b1329; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .bottom-nav { background-color: #1c2541; border-top: 1px solid #111827; }
+        .card-bg { background-color: #1c2541; border: 1px solid #334155; }
+        .input-bg { background-color: #0b1329; border: 1px solid #475569; }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <!-- SEC 1: AUTH PAGE (लॉगिन और रजिस्ट्रेशन) -->
+    <div id="authPage" class="fixed inset-0 z-50 flex flex-col justify-center bg-slate-950 px-6 overflow-y-auto">
+        <div class="w-full max-w-sm mx-auto space-y-6 py-6">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <i class="fa-solid fa-wallet text-3xl text-white"></i>
+                </div>
+                <h2 class="text-3xl font-extrabold tracking-tight text-white">Central Wallet</h2>
+                <p class="text-slate-400 text-sm mt-1">Alpha Gaming Ecosystem</p>
+            </div>
+            <!-- लॉगिन फॉर्म -->
+            <div id="loginForm" class="space-y-4 text-sm">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Mobile or Email</label>
+                    <input type="text" id="loginId" placeholder="Enter credentials" class="w-full input-bg rounded-xl px-4 py-3.5 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-2">Password</label>
+                    <input type="password" id="loginPass" placeholder="••••••••" class="w-full input-bg rounded-xl px-4 py-3.5 text-white focus:outline-none">
+                </div>
+                <button onclick="handleUserLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 cursor-pointer">
+                    <span>Secure Sign In</span><i class="fa-solid fa-right-to-bracket text-sm"></i>
+                </button>
+                <div class="text-center pt-2">
+                    <p class="text-xs text-slate-400">Don't have an account? <button onclick="toggleAuthMode(true)" class="text-blue-400 font-bold hover:underline">Register Now</button></p>
+                </div>
+            </div>
+                        <!-- रजिस्ट्रेशन फॉर्म -->
+            <div id="registerForm" class="space-y-4 text-sm hidden">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">First Name</label>
+                        <input type="text" id="regFirst" placeholder="John" class="w-full input-bg rounded-xl px-3.5 py-3 text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Last Name</label>
+                        <input type="text" id="regLast" placeholder="Doe" class="w-full input-bg rounded-xl px-3.5 py-3 text-white focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Mobile Number</label>
+                    <input type="tel" id="regMobile" placeholder="99927XXXXX" class="w-full input-bg rounded-xl px-4 py-3 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Email (Gmail)</label>
+                    <input type="email" id="regEmail" placeholder="name@gmail.com" class="w-full input-bg rounded-xl px-4 py-3 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Create Password</label>
+                    <input type="password" id="regPass" placeholder="••••••••" class="w-full input-bg rounded-xl px-4 py-3 text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1.5">Referral Code (Optional)</label>
+                    <input type="text" id="regRef" placeholder="PARV1001" class="w-full input-bg rounded-xl px-4 py-3 text-white focus:outline-none">
+                </div>
+                <button onclick="handleUserRegister()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                    <span>Create Free Account</span><i class="fa-solid fa-user-plus text-sm"></i>
+                </button>
+                <div class="text-center pt-2">
+                    <p class="text-xs text-slate-400">Already have an account? <button onclick="toggleAuthMode(false)" class="text-blue-400 font-bold hover:underline">Sign In</button></p>
+                </div>
+            </div>
+            <p id="authError" class="text-red-400 text-xs text-center font-medium hidden"></p>
+        </div>
+    </div>
+    <!-- SEC 2: MAIN HOME DASHBOARD UI -->
+    <div id="appDashboard" class="hidden max-w-md mx-auto px-4 pt-6 space-y-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3" onclick="openSidebarMenu()">
+                <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-full flex items-center justify-center border-2 border-slate-700 shadow-md cursor-pointer">
+                    <i class="fa-solid fa-bars text-white text-sm"></i>
+                </div>
+                <div>
+                    <h4 id="lblUserName" class="text-sm font-bold text-white">Hello, User</h4>
+                    <p id="lblUserUpi" class="text-[10px] text-slate-400 font-mono">cw1000@centralwallet</p>
+                </div>
+            </div>
+            <div class="relative">
+                <button class="w-10 h-10 card-bg rounded-xl flex items-center justify-center text-slate-400"><i class="fa-solid fa-bell text-sm"></i></button>
+                <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full"></span>
+            </div>
+        </div>
+                <div class="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-3 text-center text-[10px] tracking-wider text-slate-500 font-semibold uppercase">
+            <i class="fa-solid fa-rectangle-ad mr-1.5 text-blue-500"></i> Google AdMob Banner Advertisement
+        </div>
+        <!-- बैलेंस शो/हाइड कार्ड लॉजिक -->
+        <div class="card-bg p-5 rounded-2xl shadow-xl relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900">
+            <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Available Balance</p>
+            <div class="flex items-center justify-between mt-3">
+                <div class="flex flex-col">
+                    <div class="flex items-baseline space-x-1.5">
+                        <span id="txtWalletBalance" class="text-3xl font-extrabold tracking-tight text-white">••••••</span>
+                        <span id="txtCoinLabel" class="text-xs font-bold text-amber-400 hidden">Alpha Coins</span>
+                    </div>
+                    <span id="txtRealMoneyBalance" class="text-xs text-slate-400 font-medium mt-0.5 hidden">Real: ₹0.00</span>
+                </div>
+                <button onclick="triggerBalanceCheck()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 cursor-pointer">
+                    <i id="btnBalanceIcon" class="fa-solid fa-eye text-xs"></i><span id="btnBalanceText">Check Balance</span>
+                </button>
+            </div>
+        </div>
+        <!-- मनी ट्रांसफर (स्कैन/सर्च हटे हुए) -->
+        <div class="grid grid-cols-3 gap-3">
+            <button onclick="openActionPage('toMobile')" class="card-bg p-3.5 rounded-xl flex flex-col items-center text-center space-y-2 hover:border-blue-500 transition-colors cursor-pointer">
+                <div class="w-10 h-10 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center"><i class="fa-solid fa-mobile-screen text-base"></i></div>
+                <span class="text-xs font-bold tracking-tight">To Mobile</span>
+            </button>
+            <button onclick="openActionPage('toUpi')" class="card-bg p-3.5 rounded-xl flex flex-col items-center text-center space-y-2 hover:border-blue-500 transition-colors cursor-pointer">
+                <div class="w-10 h-10 bg-indigo-500/10 text-indigo-400 rounded-xl flex items-center justify-center"><i class="fa-solid fa-at text-base"></i></div>
+                <span class="text-xs font-bold tracking-tight">To UPI ID</span>
+            </button>
+            <button onclick="alert('Gaming Ecosystem: Coming Soon!')" class="card-bg p-3.5 rounded-xl flex flex-col items-center text-center space-y-2 opacity-60 cursor-not-allowed">
+                <div class="w-10 h-10 bg-amber-500/10 text-amber-400 rounded-xl flex items-center justify-center"><i class="fa-solid fa-gamepad text-base"></i></div>
+                <span class="text-xs font-bold tracking-tight">Play Game</span>
+            </button>
+        </div>
+                <div>
+            <div class="flex items-center justify-between mb-3.5">
+                <h4 class="text-sm font-bold tracking-tight text-white uppercase">Wallet Settings</h4>
+                <span class="text-[10px] text-slate-500 font-bold">1 ACTIVE</span>
+            </div>
+            <div class="grid grid-cols-4 gap-3 text-center text-[10px]">
+                <button onclick="openActionPage('inviteFriends')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 border border-blue-500/40 hover:border-blue-500 cursor-pointer">
+                    <div class="w-8 h-8 bg-blue-500/10 text-blue-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-gift text-sm"></i></div>
+                    <span class="font-bold leading-tight block">Invite Friends</span>
+                </button>
+                <button onclick="alert('Rewards: Coming Soon!')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 opacity-50"><div class="w-8 h-8 bg-slate-500/10 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-trophy text-sm"></i></div><span class="font-bold leading-tight block">Rewards</span></button>
+                <button onclick="alert('KYC: Coming Soon!')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 opacity-50"><div class="w-8 h-8 bg-slate-500/10 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-id-card text-sm"></i></div><span class="font-bold leading-tight block">KYC Verify</span></button>
+                <button onclick="alert('Security: Coming Soon!')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 opacity-50"><div class="w-8 h-8 bg-slate-500/10 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-user-shield text-sm"></i></div><span class="font-bold leading-tight block">Security</span></button>
+                <button onclick="alert('Banks: Coming Soon!')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 opacity-50"><div class="w-8 h-8 bg-slate-500/10 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-building-columns text-sm"></i></div><span class="font-bold leading-tight block">My Banks</span></button>
+                <button onclick="alert('Card: Coming Soon!')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 opacity-50"><div class="w-8 h-8 bg-slate-500/10 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-credit-card text-sm"></i></div><span class="font-bold leading-tight block">Wallet Card</span></button>
+                <button onclick="alert('Theme: Coming Soon!')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 opacity-50"><div class="w-8 h-8 bg-slate-500/10 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-moon text-sm"></i></div><span class="font-bold leading-tight block">Theme</span></button>
+                <button onclick="alert('Settings: Coming Soon!')" class="card-bg p-3 rounded-xl flex flex-col items-center justify-center space-y-2 opacity-50"><div class="w-8 h-8 bg-slate-500/10 text-slate-400 rounded-lg flex items-center justify-center"><i class="fa-solid fa-sliders text-sm"></i></div><span class="font-bold leading-tight block">Setup</span></button>
+            </div>
+        </div>
+        <div class="card-bg p-4 rounded-2xl space-y-3 shadow-lg">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400">Recent Activity</h5>
+                <button onclick="switchBottomTab('history')" class="text-xs font-bold text-blue-400 hover:underline">View All</button>
+            </div>
+            <div id="miniPassbookList" class="space-y-3 divide-y divide-slate-800 text-xs"><p class="text-center text-slate-500 py-2">No recent transactions.</p></div>
+        </div>
+    </div>
+    <!-- 3-बटन बॉटम बार -->
+    <div id="bottomNavBar" class="hidden fixed bottom-0 left-0 right-0 z-40 bottom-nav h-16 max-w-md mx-auto grid grid-cols-3 shadow-2xl">
+        <button onclick="switchBottomTab('home')" id="btnNavHome" class="flex flex-col items-center justify-center text-blue-500 space-y-0.5 cursor-pointer"><i class="fa-solid fa-house text-lg"></i><span class="text-[10px] font-bold">Home</span></button>
+        <button onclick="switchBottomTab('alert')" id="btnNavAlert" class="flex flex-col items-center justify-center text-slate-400 space-y-0.5 cursor-pointer"><i class="fa-solid fa-bullhorn text-lg"></i><span class="text-[10px] font-bold">Alert</span></button>
+        <button onclick="switchBottomTab('history')" id="btnNavHistory" class="flex flex-col items-center justify-center text-slate-400 space-y-0.5 cursor-pointer"><i class="fa-solid fa-clock-rotate-left text-lg"></i><span class="text-[10px] font-bold">History</span></button>
+    </div>
+        <!-- SEC 5: SIDE HAMBURGER MENU (☰) -->
+    <div id="sidebarMenu" class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-950 border-r border-slate-800 transform -translate-x-full transition-transform duration-300 shadow-2xl flex flex-col hidden">
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">CW</div>
+                <span class="font-extrabold text-sm tracking-wide text-white uppercase">Wallet Menu</span>
+            </div>
+            <button onclick="closeSidebarMenu()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+        <nav class="p-4 space-y-1.5 flex-1 overflow-y-auto text-sm">
+            <button onclick="openMenuPage('deposit')" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white text-left cursor-pointer"><i class="fa-solid fa-arrow-down-to-square w-5 text-emerald-400 text-base"></i><span class="font-bold">Deposit Money</span></button>
+            <button onclick="openMenuPage('convert')" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white text-left cursor-pointer"><i class="fa-solid fa-right-left w-5 text-amber-400 text-base"></i><span class="font-bold">Convert Coins</span></button>
+            <button onclick="openMenuPage('withdrawal')" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white text-left cursor-pointer"><i class="fa-solid fa-arrow-up-from-square w-5 text-red-400 text-base"></i><span class="font-bold">Withdrawal Coins</span></button>
+            <button onclick="openMenuPage('support')" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-slate-300 hover:bg-slate-900 hover:text-white text-left cursor-pointer"><i class="fa-solid fa-headset w-5 text-blue-400 text-base"></i><span class="font-bold">Help Support</span></button>
+            <div class="pt-4 border-t border-slate-900 my-2"></div>
+            <button onclick="handleUserLogout()" class="w-full flex items-center space-x-3.5 px-4 py-3 rounded-xl text-red-400 hover:bg-red-950/20 text-left cursor-pointer"><i class="fa-solid fa-power-off w-5 text-base"></i><span class="font-bold">Log Out Account</span></button>
+        </nav>
+    </div>
+    <!-- SEC 6: SUB-PAGE CONTAINER -->
+    <div id="subPageContainer" class="hidden fixed inset-0 z-40 bg-slate-950 px-4 pt-6 pb-20 overflow-y-auto max-w-md mx-auto w-full">
+        <header class="flex items-center space-x-4 mb-6">
+            <button onclick="closeSubPage()" class="w-9 h-9 card-bg rounded-xl flex items-center justify-center text-slate-400 cursor-pointer"><i class="fa-solid fa-arrow-left text-sm"></i></button>
+            <h2 id="subPageTitle" class="text-xl font-black text-white">Action Page</h2>
+        </header>
+        <!-- DEPOSIT SUB-PAGE -->
+        <div id="pageDeposit" class="hidden space-y-5 text-xs">
+            <div class="card-bg p-4 rounded-xl space-y-3 bg-gradient-to-r from-slate-900 to-slate-800">
+                <h4 class="font-bold text-emerald-400 text-sm flex items-center"><i class="fa-solid fa-building-columns mr-1.5"></i> Admin Bank Details</h4>
+                <div class="space-y-1.5 font-mono text-slate-300">
+                    <p>Holder: <span id="admHolder" class="text-white font-bold">Loading...</span></p>
+                    <p>Bank: <span id="admBank" class="text-white">Loading...</span></p>
+                    <p>A/C: <span id="admAcc" class="text-white font-bold select-all">Loading...</span></p>
+                    <p>IFSC: <span id="admIfsc" class="text-white select-all">Loading...</span></p>
+                </div>
+            </div>
+            <div class="card-bg p-4 rounded-xl space-y-3 bg-gradient-to-r from-slate-900 to-slate-800">
+                <h4 class="font-bold text-indigo-400 text-sm flex items-center"><i class="fa-solid fa-qrcode mr-1.5"></i> UPI / QR Code Payment</h4>
+                <p class="text-slate-300 font-mono">UPI ID: <span id="admUpi" class="text-white font-bold select-all">Loading...</span></p>
+                <div id="admQrBox" class="flex justify-center py-2 hidden"><img id="admQrImage" src="" class="w-40 h-40 rounded-lg border border-slate-700 shadow-md"></div>
+            </div>
+            <div class="space-y-3 bg-slate-900 p-4 rounded-xl border border-slate-800">
+                <h4 class="font-bold text-white text-sm">Submit 12-Digit UTR Number</h4>
+                <div><label class="block text-slate-400 mb-1">Amount Transferred (INR)</label><input type="number" id="depAmount" placeholder="Exact amount" class="w-full input-bg rounded-xl px-4 py-3 text-white text-sm focus:outline-none"></div>
+                <div><label class
