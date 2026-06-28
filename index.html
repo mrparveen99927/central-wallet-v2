@@ -219,77 +219,79 @@ document.getElementById('val-ref-code').innerText = currentUserSession.uid;
 </script>
 <script>
 function verifyMpinAndShowBalance() {
-const mpin = prompt("Enter 4-Digit Security MPIN:"); if(!mpin) return;
-document.getElementById('val-coins').innerText = `${currentUserSession.alphaCoins} Coins`;
-document.getElementById('val-real').innerText = `Real: ₹${parseFloat(currentUserSession.realMoneyBalance).toFixed(2)}`;
-document.getElementById('val-real').style.display = 'block';
+    const mpin = prompt("Enter 4-Digit Security MPIN:"); if(!mpin) return;
+    document.getElementById('val-coins').innerText = `${currentUserSession.alphaCoins} Coins`;
+    document.getElementById('val-real').innerText = `Real: ₹${parseFloat(currentUserSession.realMoneyBalance).toFixed(2)}`;
+    document.getElementById('val-real').style.display = 'block';
 }
 
 function toggleAppSidebar(open) {
-const sidebar = document.getElementById('app-sidebar'); const backdrop = document.getElementById('app-backdrop');
-if(open) { sidebar.classList.add('open'); backdrop.classList.add('show'); }
-else { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+    const sidebar = document.getElementById('app-sidebar'); const backdrop = document.getElementById('app-backdrop');
+    if(open) { sidebar.classList.add('open'); backdrop.classList.add('show'); }
+    else { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
 }
 
 function openAppSubPage(type) {
-toggleAppSidebar(false);
-const subPages = ['deposit', 'withdrawal', 'convert', 'p2p', 'support', 'invite'];
-subPages.forEach(p => document.getElementById(`sub-${p}`).style.display = 'none');
-document.getElementById(`sub-${type === 'p2p-mobile' || type === 'p2p-upi' ? 'p2p' : type}`).style.display = 'block';
-if(type === 'deposit') loadCompanyLiveBankChannels();
-if(type === 'p2p-mobile') { document.getElementById('lbl-p2p-title').innerText = "Transfer To Mobile"; document.getElementById('lbl-p2p-input').innerText = "Target Mobile Number"; }
-if(type === 'p2p-upi') { document.getElementById('lbl-p2p-title').innerText = "Transfer To UPI ID"; document.getElementById('lbl-p2p-input').innerText = "Target Custom UPI Address"; }
+    toggleAppSidebar(false);
+    const subPages = ['deposit', 'withdrawal', 'convert', 'p2p', 'support', 'invite'];
+    subPages.forEach(p => document.getElementById(`sub-${p}`).style.display = 'none');
+    document.getElementById(`sub-${type === 'p2p-mobile' || type === 'p2p-upi' ? 'p2p' : type}`).style.display = 'block';
+    if(type === 'deposit') loadCompanyLiveBankChannels();
+    if(type === 'p2p-mobile') { document.getElementById('lbl-p2p-title').innerText = "Transfer To Mobile"; document.getElementById('lbl-p2p-input').innerText = "Target Mobile Number"; }
+    if(type === 'p2p-upi') { document.getElementById('lbl-p2p-title').innerText = "Transfer To UPI ID"; document.getElementById('lbl-p2p-input').innerText = "Target Custom UPI Address"; }
 }
 
 function closeAppSubPage() {
-const subPages = ['deposit', 'withdrawal', 'convert', 'p2p', 'support', 'invite'];
-subPages.forEach(p => document.getElementById(`sub-${p}`).style.display = 'none');
+    const subPages = ['deposit', 'withdrawal', 'convert', 'p2p', 'support', 'invite'];
+    subPages.forEach(p => document.getElementById(`sub-${p}`).style.display = 'none');
 }
 
 async function loadCompanyLiveBankChannels() {
-try {
-const res = await fetch(`${API_URL}/admin/get-payment-settings`); const config = await res.json();
-document.getElementById('d-holder').innerText = config.companyBankDetails?.accountHolder || 'Not Set';
-document.getElementById('d-bank').innerText = config.companyBankDetails?.bankName || 'Not Set';
-document.getElementById('d-acc').innerText = config.companyBankDetails?.accountNumber || 'Not Set';
-document.getElementById('d-ifsc').innerText = config.companyBankDetails?.ifscCode || 'Not Set';
-document.getElementById('d-upi').innerText = config.companyUpiId || 'Not Set';
-if(config.companyQrCodeUrl) { document.getElementById('d-qr-img').src = config.companyQrCodeUrl; document.getElementById('d-qr-frame').style.display = 'block'; }
-} catch(e) { console.error(e); }
+    try {
+        const res = await fetch(`${API_URL}/admin/get-payment-settings`); const config = await res.json();
+        document.getElementById('d-holder').innerText = config.companyBankDetails?.accountHolder || 'Not Set';
+        document.getElementById('d-bank').innerText = config.companyBankDetails?.bankName || 'Not Set';
+        document.getElementById('d-acc').innerText = config.companyBankDetails?.accountNumber || 'Not Set';
+        document.getElementById('d-ifsc').innerText = config.companyBankDetails?.ifscCode || 'Not Set';
+        document.getElementById('d-upi').innerText = config.companyUpiId || 'Not Set';
+        if(config.companyQrCodeUrl) { document.getElementById('d-qr-img').src = config.companyQrCodeUrl; document.getElementById('d-qr-frame').style.display = 'block'; }
+    } catch(e) { alert("Cannot load bank details. Ensure server is awake!"); }
 }
 
 async function submitDepositReceiptToAdmin() {
-const amt = document.getElementById('in-dep-amount').value; const utr = document.getElementById('in-dep-utr').value.trim();
-try {
-const res = await fetch(`${API_URL}/wallet/deposit-request`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: currentUserSession.uid, amount: amt, utrNumber: utr }) });
-const data = await res.json(); alert(data.message || data.error); if(!data.error) closeAppSubPage();
-} catch(e) { alert("Failed submitting deposit data!"); }
+    const amt = document.getElementById('in-dep-amount').value; const utr = document.getElementById('in-dep-utr').value.trim();
+    if(!amt || !utr) { alert("Please enter exact Amount and UTR Number!"); return; }
+    try {
+        const res = await fetch(`${API_URL}/wallet/deposit-request`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: currentUserSession.uid, amount: amt, utrNumber: utr }) });
+        const data = await res.json(); alert(data.message || data.error); if(!data.error) closeAppSubPage();
+    } catch(e) { alert("Deposit failed. Server is currently unreachable!"); }
 }
 
 function adjustWithdrawalFieldsUI() {
-const mode = document.getElementById('sel-wth-mode').value;
-document.getElementById('w-group-upi').style.display = (mode === 'UPI') ? 'block' : 'none';
-document.getElementById('w-group-qr').style.display = (mode === 'QR_Code') ? 'block' : 'none';
-document.getElementById('w-group-bank').style.display = (mode === 'Bank_Transfer') ? 'block' : 'none';
+    const mode = document.getElementById('sel-wth-mode').value;
+    document.getElementById('w-group-upi').style.display = (mode === 'UPI') ? 'block' : 'none';
+    document.getElementById('w-group-qr').style.display = (mode === 'QR_Code') ? 'block' : 'none';
+    document.getElementById('w-group-bank').style.display = (mode === 'Bank_Transfer') ? 'block' : 'none';
 }
 
 async function submitWithdrawalRequestToAdmin() {
-const amt = document.getElementById('in-wth-amount').value; const mpin = document.getElementById('in-wth-mpin').value;
-try {
-const res = await fetch(`${API_URL}/wallet/withdraw-request`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: currentUserSession.uid, amount: amt, mpin: mpin }) });
-const data = await res.json(); alert(data.message || data.error); if(!data.error) closeAppSubPage();
-} catch(e) { alert("Error dispatching transaction layout!"); }
+    const amt = document.getElementById('in-wth-amount').value; const mpin = document.getElementById('in-wth-mpin').value;
+    if(!amt || !mpin) { alert("Please enter Amount and 4-Digit MPIN!"); return; }
+    try {
+        const res = await fetch(`${API_URL}/wallet/withdraw-request`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uid: currentUserSession.uid, amount: amt, mpin: mpin }) });
+        const data = await res.json(); alert(data.message || data.error); if(!data.error) closeAppSubPage();
+    } catch(e) { alert("Withdrawal request failed. Network connection error!"); }
 }
 
 async function executeP2PCoinsTransfer() {
-const target = document.getElementById('in-p2p-target').value.trim(); const amt = document.getElementById('in-p2p-amount').value; const mpin = document.getElementById('in-p2p-mpin').value;
-try {
-const res = await fetch(`${API_URL}/wallet/p2p-transfer`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderUid: currentUserSession.uid, receiverUpiOrMobile: target, amount: amt, mpin: mpin }) });
-const data = await res.json(); alert(data.message || data.error);
-if(!data.error) { currentUserSession.alphaCoins = data.newBalance; document.getElementById('val-coins').innerText = `${currentUserSession.alphaCoins} Coins`; closeAppSubPage(); }
-} catch(e) { alert("Core P2P pipeline exception!"); }
+    const target = document.getElementById('in-p2p-target').value.trim(); const amt = document.getElementById('in-p2p-amount').value; const mpin = document.getElementById('in-p2p-mpin').value;
+    if(!target || !amt || !mpin) { alert("Please fill all transfer fields!"); return; }
+    try {
+        const res = await fetch(`${API_URL}/wallet/p2p-transfer`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ senderUid: currentUserSession.uid, receiverUpiOrMobile: target, amount: amt, mpin: mpin }) });
+        const data = await res.json(); alert(data.message || data.error);
+        if(!data.error) { currentUserSession.alphaCoins = data.newBalance; document.getElementById('val-coins').innerText = `${currentUserSession.alphaCoins} Coins`; closeAppSubPage(); }
+    } catch(e) { alert("P2P Pipeline Error. Verify network and try again!"); }
 }
 </script>
 </body>
 </html>
-
