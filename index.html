@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Wallet V2 - Master cPanel</title>
+    <script src="https://jsdelivr.net"></script>
+    <link rel="stylesheet" href="https://cloudflare.com">
+    <style>.custom-blur { backdrop-filter: blur(10px); }</style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+    <div id="loginPage" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-500/30">
+                    <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
+                </div>
+                <h2 class="text-2xl font-bold tracking-tight">Master cPanel V2</h2>
+                <p class="text-slate-400 text-sm mt-1">Authorized Access Only</p>
+            </div>
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Username</label>
+                    <input type="text" id="adminUser" placeholder="admin" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Master Password</label>
+                    <div class="relative">
+                        <input type="password" id="adminPass" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500">
+                        <button onclick="togglePassword()" class="absolute right-4 top-3.5 text-slate-400 hover:text-white"><i id="passEye" class="fa-solid fa-eye"></i></button>
+                    </div>
+                </div>
+                <button onclick="handleAdminLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-3.5 rounded-xl transition-all shadow-lg flex items-center justify-center space-x-2 mt-2 cursor-pointer">
+                    <span>Secure Authorization</span><i class="fa-solid fa-arrow-right text-sm"></i>
+                </button>
+                <p id="loginError" class="text-red-400 text-xs text-center font-medium hidden"></p>
+            </div>
+        </div>
+    </div>
+        <div id="adminPanel" class="hidden min-h-screen flex flex-col md:flex-row">
+        <aside class="w-full md:w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">CW</div>
+                    <span class="font-bold tracking-wide text-sm uppercase">Control Room</span>
+                </div>
+                <span class="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/20">LIVE</span>
+            </div>
+            <nav class="p-4 space-y-1.5 flex-1 overflow-y-auto text-sm">
+                <button onclick="switchTab('dashboard')" class="tab-btn active w-full flex items-center space-x-3 px-4 py-3 rounded-xl bg-slate-900 text-white font-medium text-left">
+                    <i class="fa-solid fa-chart-pie w-5 text-blue-500"></i><span>Main UI Summary</span>
+                </button>
+                <button onclick="switchTab('users')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left">
+                    <i class="fa-solid fa-users w-5 text-slate-400"></i><span>User Details & Ban</span>
+                </button>
+                <button onclick="switchTab('deposits')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left relative">
+                    <i class="fa-solid fa-arrow-down-to-square w-5 text-slate-400"></i><span>Deposit Requests</span>
+                    <span id="depositBadge" class="absolute right-4 bg-amber-500 text-slate-950 font-bold text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                <button onclick="switchTab('withdrawals')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left relative">
+                    <i class="fa-solid fa-arrow-up-from-square w-5 text-slate-400"></i><span>Withdrawal Requests</span>
+                    <span id="withdrawBadge" class="absolute right-4 bg-amber-500 text-slate-950 font-bold text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                <button onclick="switchTab('paymentSettings')" class="tab-btn w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-900/50 hover:text-slate-100 text-left">
+                    <i class="fa-solid fa-wallet w-5 text-slate-400"></i><span>Account Switch Tool</span>
+                </button>
+                <div class="pt-4 border-t border-slate-800 my-2"></div>
+                <button onclick="handleLogout()" class="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-950/20 text-left">
+                    <i class="fa-solid fa-right-from-bracket w-5"></i><span>Secure Logout</span>
+                </button>
+            </nav>
+        </aside>
+                <main class="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h1 id="pageTitle" class="text-2xl font-bold tracking-tight text-white">Main UI Summary</h1>
+                    <p class="text-slate-400 text-xs mt-1">Live server link: ://onrender.com</p>
+                </div>
+            </header>
+            <div id="tabContent">
+                <div id="dashboardTab" class="space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div><p class="text-xs font-semibold uppercase text-slate-400">Total Users</p><h3 id="statTotalUsers" class="text-2xl font-bold mt-2 text-white">0</h3></div>
+                                <div class="bg-blue-500/10 text-blue-400 p-3 rounded-xl"><i class="fa-solid fa-users text-lg"></i></div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div><p class="text-xs font-semibold uppercase text-slate-400">Total Deposit</p><h3 id="statTotalDeposit" class="text-2xl font-bold mt-2 text-emerald-400">₹0</h3></div>
+                                <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl"><i class="fa-solid fa-arrow-down-long text-lg"></i></div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg">
+                            <div class="flex justify-between items-start">
+                                <div><p class="text-xs font-semibold uppercase text-slate-400">Total Withdrawal</p><h3 id="statTotalWithdraw" class="text-2xl font-bold mt-2 text-red-400">₹0</h3></div>
+                                <div class="bg-red-500/10 text-red-400 p-3 rounded-xl"><i class="fa-solid fa-arrow-up-long text-lg"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden mt-8">
+                        <div class="p-5 border-b border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <h3 class="font-bold text-white">Live System Users</h3>
+                            <div class="relative w-full sm:w-64">
+                                <input type="text" id="userSearchInput" onkeyup="searchTable()" placeholder="Search..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-700">
+                                        <th class="p-4">UID</th><th class="p-4">User Details</th><th class="p-4">Wallet Balance</th><th class="p-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                                <div id="depositsTab" class="hidden space-y-6">
+                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
+                        <div class="p-5 border-b border-slate-700"><h3 class="font-bold text-white">Pending UTR Verifications</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-700">
+                                        <th class="p-4">Txn ID</th><th class="p-4">User UID</th><th class="p-4">Amount</th><th class="p-4">Submitted UTR</th><th class="p-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="depositTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div id="withdrawalsTab" class="hidden space-y-6">
+                    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
+                        <div class="p-5 border-b border-slate-700"><h3 class="font-bold text-white">Pending Payout Requests</h3></div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-slate-900 text-slate-400 font-semibold border-b border-slate-700">
+                                        <th class="p-4">Txn ID</th><th class="p-4">User UID</th><th class="p-4">Amount</th><th class="p-4">Details</th><th class="p-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="withdrawTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div id="paymentSettingsTab" class="hidden max-w-2xl bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                    <h3 class="font-bold text-lg text-white mb-5 border-b border-slate-700 pb-3">Dynamic Account Switch Tool</h3>
+                    <div class="space-y-4 text-xs">
+                        <div><label class="block text-slate-400 mb-1">Live UPI ID</label><input type="text" id="cfgUpiId" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
+                        <div><label class="block text-slate-400 mb-1">Live QR Link</label><input type="text" id="cfgQrCode" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-slate-400 mb-1">Bank Name</label><input type="text" id="cfgBankName" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
+                            <div><label class="block text-slate-400 mb-1">Account No</label><input type="text" id="cfgAccNo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-slate-400 mb-1">IFSC Code</label><input type="text" id="cfgIfsc" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
+                            <div><label class="block text-slate-400 mb-1">Holder Name</label><input type="text" id="cfgHolder" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white"></div>
+                        </div>
+                        <button onclick="savePaymentSettings()" class="w-full bg-emerald-600 text-white font-semibold py-3 rounded-xl mt-3 cursor-pointer">Update Accounts</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+        </div>
+            <script>
+        const API_URL = "https://central-wallet-v2.onrender.com";
+        function togglePassword() {
+            const passInput = document.getElementById('adminPass');
+            const eyeIcon = document.getElementById('passEye');
+            if (passInput.type === "password") { passInput.type = "text"; eyeIcon.className = "fa-solid fa-eye-slash"; }
+            else { passInput.type = "password"; eyeIcon.className = "fa-solid fa-eye"; }
+        }
+        async function handleAdminLogin() {
+            const username = document.getElementById('adminUser').value;
+            const password = document.getElementById('adminPass').value;
+            const errBox = document.getElementById('loginError');
+            try {
+                const res = await fetch(`${API_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('adminPanel').classList.remove('hidden');
+                    loadDashboardData();
+                } else { errBox.innerText = data.error || "Authorization Failed!"; errBox.classList.remove('hidden'); }
+            } catch (err) { errBox.innerText = "Server Unreachable!"; errBox.classList.remove('hidden'); }
+        }
+        function switchTab(tabId) {
+            const tabs = ['dashboard', 'deposits', 'withdrawals', 'paymentSettings'];
+            tabs.forEach(t => { document.getElementById(`${t}Tab`)?.classList.add('hidden'); });
+            document.getElementById(`${tabId}Tab`).classList.remove('hidden');
+            document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('bg-slate-900', 'text-white'); btn.classList.add('text-slate-400'); });
+            event.currentTarget.classList.add('bg-slate-900', 'text-white');
+        }
+        async function loadDashboardData() {
+            try {
+                const res = await fetch(`${API_URL}/admin/get-payment-settings`);
+                const config = await res.json();
+                if(config) {
+                    document.getElementById('cfgUpiId').value = config.companyUpiId || '';
+                    document.getElementById('cfgQrCode').value = config.companyQrCodeUrl || '';
+                    document.getElementById('cfgBankName').value = config.companyBankDetails?.bankName || '';
+                    document.getElementById('cfgAccNo').value = config.companyBankDetails?.accountNumber || '';
+                    document.getElementById('cfgIfsc').value = config.companyBankDetails?.ifscCode || '';
+                    document.getElementById('cfgHolder').value = config.companyBankDetails?.accountHolder || '';
+                }
+            } catch(e) { console.error("Error configuration", e); }
+        }
+        async function savePaymentSettings() {
+            const payload = {
+                companyUpiId: document.getElementById('cfgUpiId').value,
+                companyQrCodeUrl: document.getElementById('cfgQrCode').value,
+                bankName: document.getElementById('cfgBankName').value,
+                accountNumber: document.getElementById('cfgAccNo').value,
+                ifscCode: document.getElementById('cfgIfsc').value,
+                accountHolder: document.getElementById('cfgHolder').value
+            };
+            try {
+                const res = await fetch(`${API_URL}/admin/update-payment-settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json(); alert(data.message || "Updated successfully!");
+            } catch (err) { alert("Failed to update settings!"); }
+        }
+        function searchTable() {
+            let input = document.getElementById("userSearchInput").value.toUpperCase();
+            let table = document.getElementById("userTableBody");
+            let tr = table.getElementsByTagName("tr");
+            for (let i = 0; i < tr.length; i++) {
+                let txtValue = tr[i].textContent || tr[i].innerText;
+                tr[i].style.display = txtValue.toUpperCase().indexOf(input) > -1 ? "" : "none";
+            }
+        }
+        function handleLogout() { window.location.reload(); }
+    </script>
+</body>
+</html>
